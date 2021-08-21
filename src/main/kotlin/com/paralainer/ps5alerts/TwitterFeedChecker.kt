@@ -30,7 +30,13 @@ class TwitterFeedChecker(
                 val latestFeed = getLatestFeed(lastUpdated)
                 latestFeed.forEach {
                     if (it.createdAt.isAfter(lastUpdated)) {
-                        emit(Message(it.text))
+                        emit(Message(
+                            """
+                            ${it.text}
+                            
+                            Twitter: https://twitter.com/AustraliaPs5/status/${it.id}
+                            """.trimIndent()
+                        ))
                     }
                 }
 
@@ -63,9 +69,9 @@ class TwitterFeedChecker(
             println("${filtered.size} tweets are DEFAULT")
 
             filtered.map {
-                FeedMessage(it.text, it.createdAt.toInstant(ZoneOffset.UTC))
+                FeedMessage(it.text, it.createdAt.toInstant(ZoneOffset.UTC), it.id)
             }
         }
 
-    data class FeedMessage(val text: String, val createdAt: Instant)
+    data class FeedMessage(val text: String, val createdAt: Instant, val id: String)
 }
