@@ -28,7 +28,9 @@ class TwitterFeedChecker(
             var lastUpdated: Instant = Instant.now().minus(Duration.ofHours(2))
             while (currentCoroutineContext().isActive) {
                 println("Checking feed since: $lastUpdated")
+                val nextTime = Instant.now()
                 val latestFeed = getLatestFeed(lastUpdated)
+                lastUpdated = nextTime
                 latestFeed.forEach {
                     if (!published.containsKey(it.id)) {
                         emit(
@@ -40,7 +42,6 @@ class TwitterFeedChecker(
                         published[it.id] = it.createdAt
                     }
                 }
-                lastUpdated = Instant.now().minusSeconds(5)
 
                 delay(delay.toMillis())
 
