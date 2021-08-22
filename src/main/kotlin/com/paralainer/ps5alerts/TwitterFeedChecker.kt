@@ -12,6 +12,7 @@ import java.time.*
 class TwitterFeedChecker(
     private val delay: Duration = Duration.ofSeconds(20)
 ) {
+    private val published: MutableMap<String, Instant> = mutableMapOf()
 
     private val twitterClient = TwitterClient(
         TwitterCredentials.builder()
@@ -29,22 +30,38 @@ class TwitterFeedChecker(
                 println("Checking feed since: $lastUpdated")
                 val latestFeed = getLatestFeed(lastUpdated)
                 latestFeed.forEach {
-                    if (it.createdAt.isAfter(lastUpdated)) {
-                        emit(Message(
-                            """
+                    if (!published.containsKey(it.id)) {
+                        emit(
+                            Message(
+                                """
                             ${it.text}
                             
                             Twitter: https://twitter.com/AustraliaPs5/status/${it.id}
                             """.trimIndent()
-                        ))
+                            )
+                        )
+
+                        published[it.id] = it.createdAt
                     }
                 }
-
-                lastUpdated = latestFeed.maxOfOrNull { it.createdAt } ?: Instant.now()
+                lastUpdated = Instant.now().minusSeconds(5)
 
                 delay(delay.toMillis())
+
+                cleanupPublished()
             }
         }
+
+
+    private fun cleanupPublished() {
+        val iterator = published.iterator()
+        while (iterator.hasNext()) {
+            val value = iterator.next()
+            if (Instant.now().toEpochMilli() - value.value.toEpochMilli() >= 600 * 1000) {
+                iterator.remove()
+            }
+        }
+    }
 
     private suspend fun getLatestFeed(since: Instant): List<FeedMessage> =
         withContext(Dispatchers.IO) {
@@ -53,9 +70,11 @@ class TwitterFeedChecker(
                 AdditionalParameters
                     .builder()
                     .maxResults(10)
-                    .startTime(LocalDateTime.ofInstant(
-                        since.minusSeconds(10), ZoneId.of("UTC")
-                    ))
+                    .startTime(
+                        LocalDateTime.ofInstant(
+                            since, ZoneId.of("UTC")
+                        )
+                    )
                     .recursiveCall(false)
                     .build()
             )

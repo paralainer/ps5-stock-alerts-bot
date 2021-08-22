@@ -13,6 +13,10 @@ fun main(): Unit = runBlocking {
     println("started")
     messages.collect {
         println("sending message: " + it.text)
-        bot.sendMessage(ChatId.fromChannelUsername("ps5stockalertsau"), it.text)
+        runCatching {
+            bot.sendMessage(ChatId.fromChannelUsername("ps5stockalertsau"), it.text)
+        }.onFailure { err ->
+            println(err)
+        }
     }
 }
