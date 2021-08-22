@@ -25,7 +25,7 @@ class TwitterFeedChecker(
 
     suspend fun subscribe(): Flow<Message> =
         flow {
-            var lastUpdated: Instant = Instant.now()
+            var lastUpdated: Instant = Instant.now().minus(Duration.ofHours(2))
             while (currentCoroutineContext().isActive) {
                 println("Checking feed since: $lastUpdated")
                 val latestFeed = getLatestFeed(lastUpdated)
@@ -33,11 +33,7 @@ class TwitterFeedChecker(
                     if (!published.containsKey(it.id)) {
                         emit(
                             Message(
-                                """
-                            ${it.text}
-                            
-                            Twitter: https://twitter.com/AustraliaPs5/status/${it.id}
-                            """.trimIndent()
+                                "${it.text}\n\nhttps://twitter.com/AustraliaPs5/status/${it.id}"
                             )
                         )
 
