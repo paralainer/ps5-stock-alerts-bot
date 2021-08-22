@@ -25,7 +25,7 @@ class TwitterFeedChecker(
 
     suspend fun subscribe(): Flow<Message> =
         flow {
-            var lastUpdated: Instant = Instant.now().minus(Duration.ofHours(2))
+            var lastUpdated: Instant = Instant.now()
             while (currentCoroutineContext().isActive) {
                 println("Checking feed since: $lastUpdated")
                 val nextTime = Instant.now()
