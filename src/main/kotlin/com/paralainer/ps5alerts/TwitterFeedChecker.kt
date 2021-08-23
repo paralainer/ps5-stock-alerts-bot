@@ -69,7 +69,7 @@ class TwitterFeedChecker(
                     .maxResults(10)
                     .startTime(
                         LocalDateTime.ofInstant(
-                            since, ZoneId.of("UTC")
+                            since.minus(delay), ZoneId.of("UTC")
                         )
                     )
                     .recursiveCall(false)
